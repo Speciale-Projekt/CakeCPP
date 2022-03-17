@@ -12,18 +12,11 @@
 
 class mle {
 public:
-    struct message {
-        char securityHeader[1]{};
-        char auxHeader[14]{};
-        uint8_t tlvs_length;
-        tlv tlvs[];
-        message(char securityHeader[1],char auxHeader[14],uint8_t tlvs_length,tlv tlvs[]);
-        message(const message &old);
+        static void writeAUXheader(FILE* fp);
+        static void writeParentRequest(char * path);
 
-        void writeToFile(FILE* file);
-
-        static message parentRequest();
-    };
+        static void writeDiscoveryRequest(char * path);
+        static void writeDiscoveryResponse(char * path);
 };
 
 

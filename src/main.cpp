@@ -1,9 +1,8 @@
 
 #include "mle/mle.h"
+#include <openthread/message.h>
 
 int main() {
-    FILE* file = fopen("test.txt","a");
-    mle::message message = mle::message::parentRequest();
-    message.writeToFile(file);
-    fclose(file);
+    char * path = "text.txt";
+    mle::writeDiscoveryRequest(path);
  }

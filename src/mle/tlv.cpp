@@ -4,19 +4,18 @@
 
 #include <cstdio>
 #include "tlv.h"
-tlv::tlv(char *tlvType, char *tlvLength, char *tlvValue) {
-    *type=*tlvType;
-    *length=*tlvLength;
-    *value=*tlvValue;
-}
 
-tlv tlv::modeTLV() {
-    char tlvType[1];
-    char tlvLength[1];
-    char tlvValue[] = {'\x0B'};
+const char *PAN_ID;
+const char *NETWORK_NAME;
 
-    tlvType[0] = '\x01';
-    tlvLength[0] = '\x01';
+int NETWORK_NAME_LENGTH;
+
+
+void tlv::writeModeTLV(FILE* file) {
+    fputc('\x01', file);
+    fputc('\x01', file);
+    fputc('\x0b', file);
+
 
     /*
      * first four bits reserved last four bits are as follows
@@ -28,52 +27,61 @@ tlv tlv::modeTLV() {
      * N:network data, set '0' if only need stable
      * */
 
-    return {tlvType,tlvLength,tlvValue};
 }
 
- tlv tlv::challengeTLV() {
-    char tlvType[1] = {'\x03'};
-    char tlvLength[] = {'\x04'};
-    char tlvValue[4] = {'A','B','C','D'};
+ void tlv::writeChallengeTLV(FILE* file) {
+    char value[4] = {'A','B','C','D'};
 
-    return {tlvType, tlvLength, tlvValue};
-
+    fputc('\x03', file);
+    fputc('\x04',file);
+    fputs(value,file);
 }
 
-tlv tlv::scanmaskTLV() {
-    char tlvType[1] = {'\x0e'};
-    char tlvLength[1] = {'\x01'};
-    char tlvValue[] ={'\xc0'} ;
-
-    return {tlvType, tlvLength, tlvValue};
-}
-
-tlv tlv::versionTLV() {
-    char tlvType[1] = {'\x12'};
-    char tlvLength[1] = {'\x02'};
-    char tlvValue[] =  {'\x00', '\x02'};
-
-    return {tlvType,  tlvLength, tlvValue};
-}
-
-void tlv::writeToFile(FILE *file) {
-    fputc(type[0], file);
-    fputc(length[0],file);
-    for(int i = 0; i< (int) length[0];i++){
-        fputc(value[i],file);
-    }
-}
-
-tlv::tlv() {
+void tlv::writeScanMaskTLV(FILE* file) {
+    fputc('\x0e',file);
+    fputc('\x01',file);
+    fputc('\xc0',file);
 
 }
 
-tlv::tlv(tlv &old) {
-    type[0]=old.type[0];
-    length[0]=old.length[0];
-    for(int i = 0; i < (int) old.length[0]; i++){
-        value[i]=old.value[i];
-    }
+void tlv::writeVersionTLV(FILE* file) {
+    fputc('\x12',file);
+    fputc('\x02',file);
+    fputc('\x00',file);
+    fputc('\x02',file);
+}
+
+void tlv::writeThreadDiscoveryRequestTLV(FILE *fp) {
+    fputc('\x1a', fp);  // type   = thread discovery
+    fputc('\x04', fp);  // length = 4
+    fputc('\x80',fp);   // subtype = 0x80
+    fputc('\x02', fp);  // sublength = 2
+    fputc('\x18', fp);  // vers =2 and joiner flag set
+    fputc('\x00',fp);   // reserved = all set to 00
+}
+
+void tlv::writeThreadDiscoveryResponseTLV(FILE *fp) {
+
+    fputc('\x1a', fp);  // type   = thread discovery
+    fputc((char) (16+NETWORK_NAME_LENGTH), fp);  // length
+
+    // Discovery Response subTLV
+    fputc('\x81',fp);   // subtype = 0x81
+    fputc('\x02', fp);  // sublength = 2
+    fputc('\x18', fp);  // vers =2 and joiner flag set
+    fputc('\x00',fp);   // reserved = all set to 00
+
+    // Extended Pan ID subTLV
+    fputc('\x02',fp);   // subtype = 0x02
+    fputc('\x08', fp);  // sublength = 8
+    fputs(PAN_ID,fp);   // The Extended PAN ID
+
+    // Network Name subTLV
+    putc('\x03',fp);   // subtype = 0x02
+    fputc((char) NETWORK_NAME_LENGTH, fp);  // sublength = 8
+    fputs(NETWORK_NAME,fp);   // The Extended PAN ID
+
+    // TODO: optional Steering data, Joiner UDP port and Commissioner UDP port
 }
 
 

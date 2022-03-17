@@ -5,22 +5,15 @@
 #ifndef CAKECPP_TLV_H
 #define CAKECPP_TLV_H
 
-struct tlv {
+class tlv {
 public:
-    char type[1];
-    char length[1];
-    char value[];
+    static void writeModeTLV(FILE *file);
+    static void writeChallengeTLV(FILE* file);
+    static void writeScanMaskTLV(FILE* file);
+    static void writeVersionTLV(FILE* file);
 
-    tlv();
-    tlv(tlv &old);
-    tlv(char tlvType[1], char tlvLength[1], char tlvValue[]);
-    void writeToFile(FILE* file);
-
-    static tlv modeTLV();
-    static tlv challengeTLV();
-    static tlv scanmaskTLV();
-    static tlv versionTLV();
-
+    static void writeThreadDiscoveryRequestTLV(FILE *fp);
+    static void writeThreadDiscoveryResponseTLV(FILE *fp);
 };
 
 

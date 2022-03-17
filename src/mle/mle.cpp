@@ -3,56 +3,61 @@
 //
 
 #include "mle.h"
+void mle::writeAUXheader(FILE* fp){
+    char frame_counter[] = { 'a', 'b', 'c', 'd'};
 
-mle::message::message(char *securityHeader, char *auxHeader, uint8_t tlvs_length, tlv *tlvs) {
-    this->securityHeader[0]=securityHeader[0];
-    for(int i = 0; i< 14;i++){
-        this->auxHeader[0]=auxHeader[0];
-    }
-    this->tlvs_length=tlvs_length;
-    for(int i = 0; i< tlvs_length;i++){
-        this->tlvs[i]=tlvs[i];
+    fputc('\xB0',fp);
+    fputs(frame_counter,fp); // Frame counter
+    for(int i = 0; i<5; i++){
+        fputc('\xff', fp); // Key identifier all xFF when in key mode 2
     }
 }
 
-void mle::message::writeToFile(FILE *file) {
-    if(securityHeader[0] == '\x00'){
-        fputc(securityHeader[0],file);
-        fputs(auxHeader,file);
-    } else {
-        fputc(securityHeader[0],file);
-    }
-    for(int i = 0; i < tlvs_length; i++){
-        tlvs[i].writeToFile(file);
-    }
+void writeMIC(FILE* fp){
+    fputc('\x00',fp);
+    fputc('\x00',fp);
+}
+
+void mle::writeParentRequest(char * path) {
+    FILE * file = fopen(path, "w");
+    char  command[] = {'\x10'};
+    writeAUXheader(file);
+    fputc(command[0], file);
+    writeMIC(file);
+
+    tlv::writeModeTLV(file);
+    tlv::writeChallengeTLV(file);
+    tlv::writeScanMaskTLV(file);
+    tlv::writeVersionTLV(file);
+    fflush(file);
+    fclose(file);
 
 }
 
-mle::message mle::message::parentRequest() {
-    char securityHeader[1];
-    char aux[14];
-    uint8_t tlvs_length = 4;
-    tlv tlvs[4];
+void mle::writeDiscoveryRequest(char *path) {
+    FILE * file = fopen(path, "w");
+    char securityHeader[] = { '\xFF'};
+    char  command[] = {'\x10'};
 
-    securityHeader[0] = '\xFF';
-    for(char & i : aux){
-        i = '\x00';
-    }
-    tlvs[0] = tlv::modeTLV();
-    tlvs[1] = tlv::challengeTLV();
-    tlvs[2] = tlv::scanmaskTLV();
-    tlvs[3] = tlv::versionTLV();
+    fputc(securityHeader[0],file);
+    fputc(command[0], file);
 
-    return {securityHeader,aux,tlvs_length,tlvs};
+    tlv::writeThreadDiscoveryRequestTLV(file);
+    fflush(file);
+    fclose(file);
+
 }
 
-mle::message::message(const mle::message &old) {
-    securityHeader[0]=old.securityHeader[0];
-    for(int i = 0; i< sizeof(auxHeader);i++){
-        auxHeader[i]=old.auxHeader[i];
-    }
-    tlvs_length=old.tlvs_length;
-    for(int i = 0; i< tlvs_length;i++){
-        tlvs[i]=old.tlvs[i];
-    }
+void mle::writeDiscoveryResponse(char *path) {
+    FILE * file = fopen(path, "w");
+    char securityHeader[] = { '\xFF'};
+    char  command[] = {'\x11'};
+
+    fputc(securityHeader[0],file);
+    fputc(command[0], file);
+
+    tlv::writeThreadDiscoveryResponseTLV(file);
+    fflush(file);
+    fclose(file);
+
 }
