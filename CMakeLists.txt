@@ -3,4 +3,4 @@ project(Cake)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Cake main.cpp DirMonitor.cpp DirMonitor.h)
+add_executable(Cake main.cpp Communication/FromOT/DirMonitor.cpp Communication/FromOT/DirMonitor.h Communication/ToOT/TalkToOT.h Communication/OTProtocolMessage.h)
